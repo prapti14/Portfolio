@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>candidate_eval · Prapti Miglani</title>
+<meta name="description" content="Prapti Miglani — Senior AI Engineer. This portfolio is a live agent evaluation trace. Query it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d12; --bg-soft:#10131b; --panel:#12161f; --panel-2:#171c28;
+  --line:rgba(148,163,196,0.13); --line-strong:rgba(148,163,196,0.25);
+  --text:#dfe4ec; --dim:#8b93a7; --faint:#5a6275;
+  --sys:#7c9cff; --pass:#3ddc97; --score:#ffb454; --err:#ff6b7a;
+  --sys-glow:rgba(124,156,255,0.25); --pass-glow:rgba(61,220,151,0.2);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.65;overflow-x:hidden;}
+::selection{background:var(--sys);color:#0b0d12;}
+a{color:inherit;}
+#net,#confetti{position:fixed;inset:0;pointer-events:none;}
+#net{z-index:0;} #confetti{z-index:999;}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px;position:relative;z-index:2;}
+
+/* ============ STICKY TRACKER ============ */
+.tracker{position:sticky;top:0;z-index:100;background:rgba(11,13,18,0.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+.tracker-inner{max-width:960px;margin:0 auto;padding:10px 24px 8px;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;}
+.tracker-inner::-webkit-scrollbar{display:none;}
+.tnode{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--faint);white-space:nowrap;text-decoration:none;transition:color .3s;}
+.tnode .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--faint);transition:all .3s;flex-shrink:0;}
+.tnode.active{color:var(--sys);}
+.tnode.active .dot{background:var(--sys);border-color:var(--sys);box-shadow:0 0 8px var(--sys-glow);}
+.tnode.done{color:var(--pass);}
+.tnode.done .dot{background:var(--pass);border-color:var(--pass);}
+.tlink{width:26px;height:1px;background:var(--line-strong);margin:0 10px;flex-shrink:0;}
+.tok{margin-left:auto;font-size:10px;color:var(--faint);white-space:nowrap;padding-left:16px;}
+.tok .n{color:var(--score);}
+.tracker .bar{height:2px;background:linear-gradient(90deg,var(--sys),var(--pass));width:0%;transition:width .15s linear;}
+@media(max-width:700px){.tlink{width:14px;margin:0 6px;}.tok{display:none;}}
+
+/* ============ BOOT / HERO ============ */
+.boot{padding:64px 0 30px;}
+.prompt-line{color:var(--dim);font-size:13px;}
+.prompt-line .p{color:var(--pass);}
+.boot-log{margin-top:16px;font-size:13px;color:var(--dim);min-height:104px;}
+.boot-log .ln{opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s;}
+.boot-log .ln.on{opacity:1;transform:none;}
+.boot-log .t{color:var(--faint);margin-right:10px;}
+.boot-log .ok{color:var(--pass);} .boot-log .k{color:var(--sys);}
+.hero-name{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(44px,9vw,96px);line-height:0.98;letter-spacing:-0.03em;margin-top:30px;
+  background:linear-gradient(120deg,var(--text) 55%,var(--sys));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease;
+}
+.hero-name.on{opacity:1;transform:none;}
+.hero-sub{margin-top:14px;color:var(--dim);font-size:14px;max-width:640px;opacity:0;transition:opacity .7s ease .25s;}
+.hero-sub.on{opacity:1;}
+.hero-sub .hl{color:var(--text);}
+.hero-tagline{margin-top:20px;padding:13px 18px;border-left:2px solid var(--sys);background:linear-gradient(90deg,rgba(124,156,255,0.07),transparent);color:var(--dim);font-size:13px;max-width:640px;opacity:0;transition:opacity .7s ease .5s;}
+.hero-tagline.on{opacity:1;}
+.hero-tagline em{color:var(--sys);font-style:normal;}
+.kbd{display:inline-block;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:11px;color:var(--text);background:var(--panel-2);}
+
+/* ---- interactive DAG ---- */
+.dag-wrap{margin-top:44px;opacity:0;transition:opacity .8s ease .7s;}
+.dag-wrap.on{opacity:1;}
+.dag-hint{font-size:11px;color:var(--faint);margin-bottom:10px;}
+.dag-hint .k{color:var(--sys);}
+#dagsvg{width:100%;height:auto;display:block;}
+.dag-node{cursor:pointer;}
+.dag-node circle{fill:var(--panel);stroke:var(--sys);stroke-width:2;transition:all .25s;}
+.dag-node:hover circle,.dag-node.hot circle{stroke:var(--pass);filter:drop-shadow(0 0 8px var(--pass-glow));}
+.dag-node text{fill:var(--text);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:11px;text-anchor:middle;pointer-events:none;}
+.dag-node .sub{fill:var(--faint);font-weight:400;font-size:9px;}
+.dag-node:hover .sub,.dag-node.hot .sub{fill:var(--pass);}
+.dag-edge{stroke:rgba(148,163,196,0.25);stroke-width:1.5;fill:none;stroke-dasharray:4 5;}
+.dag-pulse{fill:var(--sys);}
+.dag-tip{position:absolute;pointer-events:none;background:var(--panel-2);border:1px solid var(--sys);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--dim);max-width:230px;opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;z-index:50;}
+.dag-tip.show{opacity:1;transform:none;}
+.dag-tip b{color:var(--text);}
+
+/* ============ NODES ============ */
+.node{padding:80px 0 30px;}
+.node-head{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;}
+.node-chip{font-size:11px;letter-spacing:0.08em;padding:5px 12px;border-radius:6px;border:1px solid var(--sys);color:var(--sys);background:rgba(124,156,255,0.08);white-space:nowrap;}
+.node-title{font-family:'Syne',sans-serif;font-weight:700;font-size:clamp(22px,3.4vw,32px);letter-spacing:-0.01em;}
+.node-status{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap;}
+.node-status .s-pass{color:var(--pass);}
+.node-desc{color:var(--faint);font-size:12.5px;margin-bottom:30px;}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.in{opacity:1;transform:none;}
+
+/* tilt cards */
+.tilt{transform-style:preserve-3d;will-change:transform;}
+
+/* ============ counters ============ */
+.counters{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:34px 0 0;}
+@media(max-width:760px){.counters{grid-template-columns:repeat(2,1fr);}}
+.counter{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px;transition:border-color .25s;cursor:default;}
+.counter:hover{border-color:var(--score);}
+.counter .cnum{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(22px,3.4vw,32px);color:var(--score);}
+.counter .clbl{font-size:11px;color:var(--faint);margin-top:2px;line-height:1.45;}
+
+/* ============ NODE 01 ============ */
+.codecard{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.codecard-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-size:11px;color:var(--faint);background:var(--bg-soft);}
+.codecard-bar .cdot{width:9px;height:9px;border-radius:50%;background:var(--line-strong);}
+.codecard pre{padding:22px 24px;overflow-x:auto;font-size:13px;line-height:1.75;}
+.j-k{color:var(--sys);} .j-s{color:var(--pass);} .j-n{color:var(--score);} .j-p{color:var(--faint);} .j-c{color:var(--faint);font-style:italic;}
+
+/* ============ NODE 02 chunks ============ */
+.chunk{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin-bottom:18px;position:relative;transition:border-color .25s;}
+.chunk:hover{border-color:var(--sys);}
+.chunk-meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:11px;color:var(--faint);margin-bottom:12px;}
+.chunk-id{color:var(--sys);}
+.relevance{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.relbar{width:90px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;}
+.relbar i{display:block;height:100%;background:linear-gradient(90deg,var(--sys),var(--pass));border-radius:3px;width:0;transition:width 1s ease .2s;}
+.chunk.in .relbar i{width:var(--rel);}
+.relnum{color:var(--score);}
+.chunk-role{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;}
+.chunk-co{color:var(--sys);}
+.chunk-dates{font-size:11.5px;color:var(--faint);margin-bottom:12px;}
+.chunk ul{list-style:none;color:var(--dim);font-size:13px;}
+.chunk li{padding-left:18px;position:relative;margin-bottom:8px;}
+.chunk li::before{content:'▸';position:absolute;left:0;color:var(--sys);}
+.chunk b{color:var(--text);font-weight:600;}
+.chunk .m{color:var(--score);font-weight:600;}
+.chunk.flash{border-color:var(--pass);box-shadow:0 0 40px var(--pass-glow);}
+
+/* ============ NODE 03 tools ============ */
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.tools-grid{grid-template-columns:1fr;}}
+.toolcall{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px;transition:border-color .25s;}
+.toolcall:hover{border-color:var(--pass);}
+.toolcall .fn{font-size:13px;margin-bottom:10px;}
+.toolcall .fn .name{color:var(--sys);} .toolcall .fn .paren{color:var(--faint);} .toolcall .fn .arg{color:var(--pass);}
+.toolcall .tool-status{font-size:10.5px;color:var(--pass);margin-bottom:12px;letter-spacing:0.06em;}
+.toolcall .chips{display:flex;flex-wrap:wrap;gap:7px;}
+.tchip{font-size:11.5px;color:var(--dim);padding:4px 10px;border-radius:6px;background:var(--panel-2);border:1px solid var(--line);transition:all .15s;}
+.tchip:hover{color:var(--text);border-color:var(--sys);}
+
+/* ============ estimator ============ */
+.estimator{background:var(--panel);border:1px solid var(--line-strong);border-radius:14px;padding:28px 30px;margin-top:40px;}
+.estimator h3{font-family:'Syne',sans-serif;font-size:19px;margin-bottom:4px;}
+.estimator .sub{font-size:12px;color:var(--faint);margin-bottom:24px;}
+.est-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.est-row label{font-size:12px;color:var(--dim);white-space:nowrap;}
+input[type=range]{flex:1;min-width:180px;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--sys),var(--pass));outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--text);border:3px solid var(--sys);cursor:grab;}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--text);border:3px solid var(--sys);cursor:grab;}
+.est-val{font-size:14px;color:var(--score);font-weight:600;min-width:110px;text-align:right;}
+.est-out{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:24px;}
+@media(max-width:700px){.est-out{grid-template-columns:1fr;}}
+.est-card{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+.est-card .lbl{font-size:10.5px;color:var(--faint);letter-spacing:0.07em;}
+.est-card .val{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--pass);margin-top:4px;}
+.est-card .basis{font-size:10.5px;color:var(--faint);margin-top:4px;}
+.est-note{font-size:11px;color:var(--faint);margin-top:16px;font-style:italic;}
+
+/* ============ NODE 04 validate ============ */
+.vtable{width:100%;border-collapse:collapse;font-size:12.5px;}
+.vtable th{text-align:left;color:var(--faint);font-weight:500;font-size:11px;letter-spacing:0.07em;padding:12px 14px;border-bottom:1px solid var(--line-strong);}
+.vtable td{padding:14px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top;}
+.vtable tbody tr{cursor:pointer;transition:background .2s;}
+.vtable tbody tr:hover td{background:rgba(124,156,255,0.04);}
+.vtable .claim{color:var(--text);}
+.vtable .ev{color:var(--faint);font-size:11.5px;}
+.badge-pass{display:inline-block;font-size:10.5px;letter-spacing:0.08em;padding:3px 9px;border-radius:5px;color:var(--faint);border:1px solid var(--line-strong);background:transparent;white-space:nowrap;transition:all .35s;}
+.badge-pass.verified{color:var(--pass);border-color:rgba(61,220,151,0.4);background:rgba(61,220,151,0.08);}
+.vtable .num{color:var(--score);font-weight:600;}
+.verify-hint{font-size:11px;color:var(--faint);margin-bottom:14px;}
+.verify-hint .k{color:var(--sys);}
+.verify-all{font-family:inherit;font-size:11px;color:var(--sys);background:transparent;border:1px solid rgba(124,156,255,0.4);border-radius:7px;padding:5px 12px;cursor:pointer;margin-left:10px;transition:all .2s;}
+.verify-all:hover{background:rgba(124,156,255,0.12);}
+@media(max-width:700px){
+  .vtable thead{display:none;}
+  .vtable tr{display:block;border-bottom:1px solid var(--line);padding:12px 0;}
+  .vtable td{display:block;border:none;padding:4px 0;}
+}
+.creds{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px;}
+@media(max-width:700px){.creds{grid-template-columns:1fr;}}
+.cred-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 24px;}
+.cred-panel h4{font-size:11px;letter-spacing:0.1em;color:var(--faint);font-weight:500;margin-bottom:14px;}
+.cred-panel .row{padding:9px 0;border-bottom:1px dashed var(--line);font-size:12.5px;color:var(--dim);}
+.cred-panel .row:last-child{border:none;}
+.cred-panel .row .name{color:var(--text);}
+.cred-panel .row .sub{color:var(--faint);font-size:11.5px;}
+.cred-panel .patent-tag{display:inline-block;font-size:10px;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;color:var(--score);border:1px solid rgba(255,180,84,0.4);background:rgba(255,180,84,0.08);margin-bottom:6px;}
+
+/* ============ NODE 05 console ============ */
+.console{background:var(--panel);border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;box-shadow:0 0 60px rgba(124,156,255,0.06);}
+.console-out{padding:24px 26px;min-height:200px;font-size:13px;max-height:340px;overflow-y:auto;}
+.console-out .q{color:var(--pass);margin:14px 0 6px;}
+.console-out .q:first-child{margin-top:0;}
+.console-out .retr{color:var(--faint);font-size:11.5px;margin-bottom:10px;}
+.console-out .a{color:var(--dim);margin-bottom:4px;}
+.console-out .a b{color:var(--text);}
+.console-out .a .m{color:var(--score);font-weight:600;}
+.console-out .lat{color:var(--faint);font-size:10.5px;margin-bottom:8px;}
+.console-out .lat .g{color:var(--pass);}
+.cite{display:inline-block;font-size:10px;color:var(--sys);border:1px solid rgba(124,156,255,0.35);border-radius:4px;padding:0 6px;margin:0 2px;vertical-align:1px;background:rgba(124,156,255,0.07);cursor:pointer;text-decoration:none;}
+.cite:hover{background:rgba(124,156,255,0.2);}
+.console-in{border-top:1px solid var(--line);background:var(--bg-soft);}
+.console-input-row{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);}
+.console-input-row .p{color:var(--pass);font-size:13px;flex-shrink:0;}
+#qinput{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:13px;caret-color:var(--pass);min-width:0;}
+#qinput::placeholder{color:var(--faint);}
+.run-btn{font-family:inherit;font-size:11.5px;padding:7px 16px;border-radius:7px;cursor:pointer;background:var(--pass);border:1px solid var(--pass);color:#0b0d12;font-weight:600;transition:all .2s;flex-shrink:0;}
+.run-btn:hover{background:#59e8ab;}
+.qchips{display:flex;flex-wrap:wrap;gap:9px;padding:14px 20px;}
+.qchips .lab{font-size:10.5px;color:var(--faint);width:100%;}
+.qchip{font-family:inherit;font-size:11.5px;color:var(--sys);background:transparent;border:1px solid rgba(124,156,255,0.4);border-radius:8px;padding:7px 13px;cursor:pointer;transition:all .2s;}
+.qchip:hover{background:rgba(124,156,255,0.12);}
+.qchip:focus-visible{outline:2px solid var(--sys);outline-offset:2px;}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--pass);vertical-align:-2px;animation:blink 1s steps(1) infinite;}
+@keyframes blink{50%{opacity:0;}}
+.typing-dots span{animation:blink 1.2s infinite;} .typing-dots span:nth-child(2){animation-delay:.2s;} .typing-dots span:nth-child(3){animation-delay:.4s;}
+
+/* ============ VERDICT ============ */
+.verdict{padding:90px 0 70px;text-align:center;}
+.verdict-box{display:inline-block;text-align:left;background:var(--panel);border:1px solid var(--line-strong);border-radius:14px;padding:34px 40px;max-width:640px;width:100%;transition:border-color .6s,box-shadow .6s;}
+.verdict-box.lit{border-color:rgba(61,220,151,0.45);box-shadow:0 0 80px var(--pass-glow);}
+.verdict-label{font-size:11px;letter-spacing:0.14em;color:var(--faint);margin-bottom:10px;}
+.verdict-main{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(26px,4.4vw,40px);color:var(--pass);letter-spacing:-0.01em;min-height:1.2em;}
+.verdict-reason{color:var(--dim);font-size:13px;margin-top:14px;}
+.verdict-reason .m{color:var(--score);}
+.verdict-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px;}
+.btn{font-family:inherit;font-size:12.5px;padding:12px 20px;border-radius:9px;text-decoration:none;border:1px solid var(--line-strong);color:var(--text);transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
+.btn:hover{border-color:var(--sys);color:var(--sys);}
+.btn-solid{background:var(--pass);border-color:var(--pass);color:#0b0d12;font-weight:600;}
+.btn-solid:hover{background:#59e8ab;color:#0b0d12;}
+footer{padding:30px 0 46px;color:var(--faint);font-size:11px;text-align:center;position:relative;z-index:2;}
+footer .k{color:var(--sys);}
+footer .egg{opacity:0.55;}
+
+/* ============ VISITOR TRACE LOG ============ */
+.vlog{
+  position:fixed;left:16px;bottom:16px;z-index:200;width:300px;max-width:calc(100vw - 32px);
+  background:rgba(16,19,27,0.92);backdrop-filter:blur(8px);
+  border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;
+  font-size:10.5px;transition:transform .3s ease;
+}
+.vlog.min .vlog-body{display:none;}
+.vlog-head{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-soft);border-bottom:1px solid var(--line);cursor:pointer;user-select:none;}
+.vlog-head .rec{width:7px;height:7px;border-radius:50%;background:var(--err);animation:blink 1.4s infinite;}
+.vlog-head .ttl{color:var(--dim);}
+.vlog-head .toggle{margin-left:auto;color:var(--faint);}
+.vlog-body{padding:8px 12px;max-height:130px;overflow:hidden;display:flex;flex-direction:column-reverse;}
+.vlog-body .ev{color:var(--faint);line-height:1.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vlog-body .ev .t{color:var(--sys);margin-right:6px;}
+.vlog-body .ev.hot{color:var(--dim);}
+@media(max-width:820px){.vlog{display:none;}}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;}
+  .reveal,.hero-name,.hero-sub,.hero-tagline,.dag-wrap,.boot-log .ln{opacity:1!important;transform:none!important;}
+  .chunk .relbar i{width:var(--rel)!important;}
+  #net{display:none;} .vlog{display:none;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="net" aria-hidden="true"></canvas>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<!-- ===== STICKY TRACKER ===== -->
+<div class="tracker">
+  <div class="tracker-inner" id="tracker">
+    <a class="tnode" href="#n1" data-node="n1"><span class="dot"></span>ingest</a><span class="tlink"></span>
+    <a class="tnode" href="#n2" data-node="n2"><span class="dot"></span>retrieve</a><span class="tlink"></span>
+    <a class="tnode" href="#n3" data-node="n3"><span class="dot"></span>tool_calls</a><span class="tlink"></span>
+    <a class="tnode" href="#n4" data-node="n4"><span class="dot"></span>validate</a><span class="tlink"></span>
+    <a class="tnode" href="#n5" data-node="n5"><span class="dot"></span>query</a><span class="tlink"></span>
+    <a class="tnode" href="#verdict" data-node="verdict"><span class="dot"></span>verdict</a>
+    <span class="tok">tokens_processed: <span class="n" id="tokCount">0</span></span>
+  </div>
+  <div class="bar" id="scrollBar"></div>
+</div>
+
+<!-- ===== BOOT / HERO ===== -->
+<header class="boot wrap">
+  <div class="prompt-line"><span class="p">recruiter@hiring-pipeline</span>:~$ python evaluate_candidate.py --deep-trace</div>
+  <div class="boot-log" id="bootlog">
+    <div class="ln"><span class="t">[00:00.12]</span> initializing <span class="k">candidate_evaluation_pipeline</span> v6.2 ... <span class="ok">OK</span></div>
+    <div class="ln"><span class="t">[00:00.31]</span> loading resume → parsing 6+ years of production AI systems ... <span class="ok">OK</span></div>
+    <div class="ln"><span class="t">[00:00.48]</span> spinning up nodes: ingest → retrieve → tool_calls → validate → verdict ... <span class="ok">OK</span></div>
+    <div class="ln"><span class="t">[00:00.55]</span> candidate identified:</div>
+  </div>
+
+  <h1 class="hero-name" id="heroName">Prapti<br>Miglani</h1>
+  <p class="hero-sub" id="heroSub">Senior AI Engineer · <span class="hl">agentic systems</span>, <span class="hl">RAG at enterprise scale</span>, <span class="hl">LLM fine-tuning</span> — AT&amp;T · SLB · FICO</p>
+  <div class="hero-tagline" id="heroTag">
+    <em>note:</em> this page is built the way she builds — as an agent pipeline. Every section is a node in the trace, every claim carries its evidence, and at the end <em>you</em> get to query her career. Press <span class="kbd">/</span> anywhere to jump straight to the console.
+  </div>
+
+  <!-- interactive DAG -->
+  <div class="dag-wrap" id="dagWrap">
+    <div class="dag-hint"><span class="k">◈ interactive</span> — hover a node to inspect it, click to execute (jump to that stage)</div>
+    <div style="position:relative;">
+      <svg id="dagsvg" viewBox="0 0 900 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive pipeline: ingest, retrieve, tool calls, validate, query, verdict">
+        <path class="dag-edge" id="edgePath" d="M80,75 C160,30 200,120 250,75 S360,120 420,75 S530,120 590,75 S700,120 760,75 L830,75"/>
+        <circle class="dag-pulse" r="4"><animateMotion dur="5s" repeatCount="indefinite"><mpath href="#edgePath"/></animateMotion></circle>
+        <circle class="dag-pulse" r="4" opacity="0.6" style="fill:var(--pass)"><animateMotion dur="5s" begin="2.5s" repeatCount="indefinite"><mpath href="#edgePath"/></animateMotion></circle>
+        <g class="dag-node" data-target="#n1" data-tip="<b>ingest</b> — GPT-4.5 Vision + OCR → structured JSON. 95%+ extraction accuracy on 300K+ monthly cases.">
+          <circle cx="80" cy="75" r="27"/><text x="80" y="79">ingest</text><text class="sub" x="80" y="122">vision · OCR</text>
+        </g>
+        <g class="dag-node" data-target="#n2" data-tip="<b>retrieve</b> — hybrid Milvus + BM25 + XGBoost. ~75% recall at 10K+ QPS for 200+ clients.">
+          <circle cx="250" cy="75" r="27"/><text x="250" y="79">retrieve</text><text class="sub" x="250" y="122">hybrid RAG</text>
+        </g>
+        <g class="dag-node" data-target="#n3" data-tip="<b>tool_calls</b> — the full stack: agents, fine-tuning, eval, deploy. Every call returned 200 in prod.">
+          <circle cx="420" cy="75" r="27"/><text x="420" y="79">tools</text><text class="sub" x="420" y="122">full stack</text>
+        </g>
+        <g class="dag-node" data-target="#n4" data-tip="<b>validate</b> — schema conformance, PII screening (97%+ recall), hallucination checks. Her claims get the same audit.">
+          <circle cx="590" cy="75" r="27"/><text x="590" y="79">validate</text><text class="sub" x="590" y="122">guardrails</text>
+        </g>
+        <g class="dag-node" data-target="#n5" data-tip="<b>query</b> — you're the human in the loop. Ask her career anything.">
+          <circle cx="760" cy="75" r="27"/><text x="760" y="79">query</text><text class="sub" x="760" y="122">you, here</text>
+        </g>
+      </svg>
+      <div class="dag-tip" id="dagTip"></div>
+    </div>
+  </div>
+
+  <!-- animated counters -->
+  <div class="counters" id="counters">
+    <div class="counter tilt"><div class="cnum" data-count="300" data-suffix="K+">0</div><div class="clbl">monthly fraud cases screened · AT&amp;T</div></div>
+    <div class="counter tilt"><div class="cnum" data-count="10" data-suffix="K+ QPS">0</div><div class="clbl">hybrid retrieval throughput · SLB</div></div>
+    <div class="counter tilt"><div class="cnum" data-count="45" data-suffix="%">0</div><div class="clbl">LLM inference cost reduction</div></div>
+    <div class="counter tilt"><div class="cnum" data-count="97" data-suffix="%+">0</div><div class="clbl">PII recall, real-time compliance gateway</div></div>
+  </div>
+</header>
+
+<!-- ===== NODE 01 · INGEST ===== -->
+<section class="node wrap" id="n1">
+  <div class="node-head reveal">
+    <span class="node-chip">NODE 01</span>
+    <span class="node-title">ingest</span>
+    <span class="node-status">status: <span class="s-pass">■ COMPLETE</span></span>
+  </div>
+  <div class="node-desc reveal">// GPT-4.5 Vision + OCR would do this to a fraud case. Here, it parses a career into structured output.</div>
+
+  <div class="codecard reveal tilt">
+    <div class="codecard-bar"><span class="cdot"></span><span class="cdot"></span><span class="cdot"></span>&nbsp;candidate.schema.json — validated ✓</div>
+    <pre>{
+  <span class="j-k">"name"</span><span class="j-p">:</span> <span class="j-s">"Prapti Miglani"</span><span class="j-p">,</span>
+  <span class="j-k">"role"</span><span class="j-p">:</span> <span class="j-s">"Senior AI Engineer"</span><span class="j-p">,</span>
+  <span class="j-k">"base"</span><span class="j-p">:</span> <span class="j-s">"Dallas, TX"</span><span class="j-p">,</span>
+  <span class="j-k">"years_production_ai"</span><span class="j-p">:</span> <span class="j-n">6+</span><span class="j-p">,</span>
+  <span class="j-k">"specialization"</span><span class="j-p">:</span> [
+    <span class="j-s">"agentic AI — LangGraph, OpenAI Agents SDK"</span><span class="j-p">,</span>
+    <span class="j-s">"RAG — Milvus, BM25, XGBoost re-ranking"</span><span class="j-p">,</span>
+    <span class="j-s">"fine-tuning — SFT, DPO, LoRA/QLoRA"</span><span class="j-p">,</span>
+    <span class="j-s">"vision — GPT-4.5 Vision, OCR pipelines"</span>
+  ]<span class="j-p">,</span>
+  <span class="j-k">"patent_pending"</span><span class="j-p">:</span> <span class="j-n">true</span><span class="j-p">,</span>   <span class="j-c">// enterprise AI systems, US filing</span>
+  <span class="j-k">"certifications"</span><span class="j-p">:</span> <span class="j-n">4</span><span class="j-p">,</span>       <span class="j-c">// Azure AI · AWS ML · Databricks GenAI + Agentic</span>
+  <span class="j-k">"prototype_only_projects"</span><span class="j-p">:</span> <span class="j-n">0</span>  <span class="j-c">// everything below ran in production</span>
+}</pre>
+  </div>
+</section>
+
+<!-- ===== NODE 02 · RETRIEVE ===== -->
+<section class="node wrap" id="n2">
+  <div class="node-head reveal">
+    <span class="node-chip">NODE 02</span>
+    <span class="node-title">retrieve</span>
+    <span class="node-status">status: <span class="s-pass">■ COMPLETE</span></span>
+  </div>
+  <div class="node-desc reveal">// hybrid retrieval over career index · top-k experience chunks, ranked by relevance to "senior AI engineer who ships"</div>
+
+  <div class="chunk reveal tilt" style="--rel:98%" id="chunk_001">
+    <div class="chunk-meta">
+      <span class="chunk-id">chunk_001</span><span>· source: att.plano.tx</span>
+      <span class="relevance"><span class="relbar"><i></i></span><span class="relnum">0.98</span></span>
+    </div>
+    <div class="chunk-role">Senior AI Engineer <span class="chunk-co">· AT&amp;T</span></div>
+    <div class="chunk-dates">May 2026 – present</div>
+    <ul>
+      <li>Architected <b>LangGraph fraud detection pipeline</b> — multi-node DAG, GPT-4.5 Vision + OCR → structured JSON. <span class="m">95%+ extraction accuracy</span> across <span class="m">300K+ monthly cases</span></li>
+      <li>Multi-node validation workflow (routing · step membership · schema conformance) → downstream errors down <span class="m">~40%</span></li>
+      <li>Built the <b>agent evaluation pipeline itself</b>: tool selection accuracy, call success rate, hallucination faithfulness, citation accuracy → redundant LLM calls down <span class="m">~30%</span></li>
+    </ul>
+  </div>
+
+  <div class="chunk reveal tilt" style="--rel:96%" id="chunk_002">
+    <div class="chunk-meta">
+      <span class="chunk-id">chunk_002</span><span>· source: slb.houston.tx</span>
+      <span class="relevance"><span class="relbar"><i></i></span><span class="relnum">0.96</span></span>
+    </div>
+    <div class="chunk-role">Backend Software Engineer II — AI Platform <span class="chunk-co">· Schlumberger (SLB)</span></div>
+    <div class="chunk-dates">Jun 2024 – Mar 2026</div>
+    <ul>
+      <li>Hybrid <b>Milvus + BM25 + XGBoost</b> retrieval with multi-layer Redis caching — <span class="m">~75% recall</span> at <span class="m">10K+ QPS</span>, serving <span class="m">200+ enterprise clients</span></li>
+      <li>RAG over <b>10,000+</b> tickets, wikis &amp; Teams threads — adaptive chunking, Mistral embeddings, <span class="m">&lt;300ms SLA</span></li>
+      <li>Multi-agent <b>compliance gateway</b> screening every LLM request in real time — <span class="m">97%+ PII recall</span> at sub-200ms</li>
+      <li>Fine-tuned GPT via <b>SFT + DPO</b> on 8,000+ labeled prompts — <span class="m">91%+ accuracy</span>, <span class="m">45% inference cost cut</span></li>
+      <li>Benchmarked Mistral / GPT / Gemini with RAGAs; shipped via Azure CI/CD with guardrails — latency down <span class="m">15%</span></li>
+    </ul>
+  </div>
+
+  <div class="chunk reveal tilt" style="--rel:84%" id="chunk_003">
+    <div class="chunk-meta">
+      <span class="chunk-id">chunk_003</span><span>· source: fico.bengaluru.in</span>
+      <span class="relevance"><span class="relbar"><i></i></span><span class="relnum">0.84</span></span>
+    </div>
+    <div class="chunk-role">Software Engineer — Machine Learning <span class="chunk-co">· FICO</span></div>
+    <div class="chunk-dates">Feb 2020 – Aug 2022</div>
+    <ul>
+      <li>Transaction categorization with <b>RoBERTa + T5 correction heads + Siamese networks</b> — <span class="m">94% accuracy</span></li>
+      <li>Self-calibrating models → FICO transactional score precision up <span class="m">28%</span></li>
+      <li>AWS Glue ETL moving <span class="m">50M+ records</span> to Redshift; PySpark pipelines behind <span class="m">10,000+</span> credit card issuances, offer utilization up <span class="m">15%</span></li>
+    </ul>
+  </div>
+
+  <div class="chunk reveal tilt" style="--rel:78%" id="chunk_004">
+    <div class="chunk-meta">
+      <span class="chunk-id">chunk_004</span><span>· source: research + early career</span>
+      <span class="relevance"><span class="relbar"><i></i></span><span class="relnum">0.78</span></span>
+    </div>
+    <div class="chunk-role">Research &amp; Foundations</div>
+    <div class="chunk-dates">2019 – 2024</div>
+    <ul>
+      <li><b>ML Researcher, University at Buffalo</b> — DenseNet121 / InceptionResNetV2 at <span class="m">95% / 94%</span> test accuracy, sustainable waste recycling CV</li>
+      <li><b>Data Scientist Intern, SLB</b> — 3D CNN, Octave CNN, ViT, knowledge distillation for methane leak detection — <span class="m">41.36%</span>, beating the 39.1% benchmark</li>
+      <li><b>SWE Intern, Yamaha Motor</b> — ERP query processing time down <span class="m">37%</span> via index optimization + Redis</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== NODE 03 · TOOL CALLS ===== -->
+<section class="node wrap" id="n3">
+  <div class="node-head reveal">
+    <span class="node-chip">NODE 03</span>
+    <span class="node-title">tool_calls</span>
+    <span class="node-status">status: <span class="s-pass">■ COMPLETE</span></span>
+  </div>
+  <div class="node-desc reveal">// the toolbox, expressed the way her agents see it — every call returned 200 in production</div>
+
+  <div class="tools-grid">
+    <div class="toolcall reveal tilt">
+      <div class="fn"><span class="name">orchestrate_agents</span><span class="paren">(</span><span class="arg">"multi-node DAGs"</span><span class="paren">)</span></div>
+      <div class="tool-status">✓ CALL SUCCEEDED · PROD</div>
+      <div class="chips"><span class="tchip">LangGraph</span><span class="tchip">OpenAI Agents SDK</span><span class="tchip">LangChain</span><span class="tchip">LlamaIndex</span><span class="tchip">FunctionTools</span><span class="tchip">Structured Outputs (Pydantic)</span></div>
+    </div>
+    <div class="toolcall reveal tilt">
+      <div class="fn"><span class="name">retrieve_and_rank</span><span class="paren">(</span><span class="arg">"hybrid"</span><span class="paren">)</span></div>
+      <div class="tool-status">✓ CALL SUCCEEDED · 10K+ QPS</div>
+      <div class="chips"><span class="tchip">Milvus</span><span class="tchip">BM25</span><span class="tchip">Pinecone</span><span class="tchip">FAISS</span><span class="tchip">pgvector</span><span class="tchip">XGBoost re-rank</span><span class="tchip">MMR</span></div>
+    </div>
+    <div class="toolcall reveal tilt">
+      <div class="fn"><span class="name">fine_tune</span><span class="paren">(</span><span class="arg">"align + compress"</span><span class="paren">)</span></div>
+      <div class="tool-status">✓ CALL SUCCEEDED · −45% COST</div>
+      <div class="chips"><span class="tchip">SFT</span><span class="tchip">DPO (RLHF)</span><span class="tchip">LoRA / QLoRA</span><span class="tchip">PEFT</span><span class="tchip">INT4/INT8 quantization</span><span class="tchip">Hugging Face</span></div>
+    </div>
+    <div class="toolcall reveal tilt">
+      <div class="fn"><span class="name">evaluate_llm</span><span class="paren">(</span><span class="arg">"trust, measured"</span><span class="paren">)</span></div>
+      <div class="tool-status">✓ CALL SUCCEEDED · FAITHFULNESS TRACKED</div>
+      <div class="chips"><span class="tchip">RAGAs</span><span class="tchip">Arize Phoenix</span><span class="tchip">OpenAI SDK Tracing</span><span class="tchip">MLflow</span><span class="tchip">hallucination metrics</span><span class="tchip">tool-call metrics</span></div>
+    </div>
+    <div class="toolcall reveal tilt">
+      <div class="fn"><span class="name">deploy</span><span class="paren">(</span><span class="arg">"ship it"</span><span class="paren">)</span></div>
+      <div class="tool-status">✓ CALL SUCCEEDED · CI/CD</div>
+      <div class="chips"><span class="tchip">Azure (AKS, ML Studio, DevOps)</span><span class="tchip">Docker</span><span class="tchip">Kubernetes / Helm</span><span class="tchip">ArgoCD</span><span class="tchip">GitHub Actions</span><span class="tchip">FastAPI</span><span class="tchip">Prometheus / Grafana</span></div>
+    </div>
+    <div class="toolcall reveal tilt">
+      <div class="fn"><span class="name">engineer_data</span><span class="paren">(</span><span class="arg">"50M+ records"</span><span class="paren">)</span></div>
+      <div class="tool-status">✓ CALL SUCCEEDED · ETL</div>
+      <div class="chips"><span class="tchip">PySpark</span><span class="tchip">Airflow</span><span class="tchip">AWS Glue / Redshift</span><span class="tchip">Dataiku</span><span class="tchip">PostgreSQL</span><span class="tchip">MongoDB</span><span class="tchip">Redis</span><span class="tchip">Python · SQL · Java · TS · C++</span></div>
+    </div>
+  </div>
+
+  <!-- interactive cost estimator -->
+  <div class="estimator reveal">
+    <h3>estimate_savings( your_workload )</h3>
+    <div class="sub">// she cut 45% of inference cost and 30% of redundant calls in production. Drag to see what that means for your stack.</div>
+    <div class="est-row">
+      <label for="spend">your monthly LLM spend</label>
+      <input type="range" id="spend" min="5000" max="500000" step="5000" value="100000" aria-label="Monthly LLM spend in dollars">
+      <span class="est-val" id="spendVal">$100,000</span>
+    </div>
+    <div class="est-out">
+      <div class="est-card"><div class="lbl">FINE-TUNING &amp; ROUTING</div><div class="val" id="saveFt">$45,000/mo</div><div class="basis">basis: 45% cost cut via SFT+DPO @ SLB</div></div>
+      <div class="est-card"><div class="lbl">REDUNDANT-CALL ELIMINATION</div><div class="val" id="saveEval">$16,500/mo</div><div class="basis">basis: ~30% fewer calls via agent eval @ AT&amp;T</div></div>
+      <div class="est-card"><div class="lbl">FIRST-YEAR IMPACT</div><div class="val" id="saveYr">$738,000</div><div class="basis">combined, annualized</div></div>
+    </div>
+    <div class="est-note">illustrative math from her shipped results — your mileage requires an interview.</div>
+  </div>
+</section>
+
+<!-- ===== NODE 04 · VALIDATE ===== -->
+<section class="node wrap" id="n4">
+  <div class="node-head reveal">
+    <span class="node-chip">NODE 04</span>
+    <span class="node-title">validate</span>
+    <span class="node-status">status: <span class="s-pass">■ COMPLETE</span></span>
+  </div>
+  <div class="node-desc reveal">// she builds hallucination checks for a living — so her own claims get the same treatment.</div>
+
+  <div class="verify-hint reveal"><span class="k">◈ interactive</span> — click each claim to run its faithfulness check <button class="verify-all" id="verifyAll">RUN ALL CHECKS</button></div>
+  <div class="reveal" style="overflow-x:auto;">
+    <table class="vtable" id="vtable">
+      <thead><tr><th>CLAIM</th><th>EVIDENCE</th><th>FAITHFULNESS</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="claim">Ships at production scale, not demo scale</td>
+          <td class="ev"><span class="num">300K+</span> monthly fraud cases (AT&amp;T) · <span class="num">200+</span> enterprise clients &amp; <span class="num">10K+</span> QPS (SLB)</td>
+          <td><span class="badge-pass">○ RUN CHECK</span></td>
+        </tr>
+        <tr>
+          <td class="claim">Builds trust layers, not just model calls</td>
+          <td class="ev"><span class="num">97%+</span> PII recall compliance gateway · schema-conformance validation nodes · faithfulness &amp; citation metrics in prod</td>
+          <td><span class="badge-pass">○ RUN CHECK</span></td>
+        </tr>
+        <tr>
+          <td class="claim">Cuts the bill, not just the latency</td>
+          <td class="ev"><span class="num">45%</span> inference cost reduction via SFT+DPO · <span class="num">~30%</span> fewer redundant LLM calls · <span class="num">15%</span> latency cut</td>
+          <td><span class="badge-pass">○ RUN CHECK</span></td>
+        </tr>
+        <tr>
+          <td class="claim">Cross-domain, regulated-industry proven</td>
+          <td class="ev">Telecom fraud (AT&amp;T) · energy/enterprise (SLB) · financial services (FICO credit scoring)</td>
+          <td><span class="badge-pass">○ RUN CHECK</span></td>
+        </tr>
+        <tr>
+          <td class="claim">Invents, not just implements</td>
+          <td class="ev">US patent pending — enterprise AI assistance (SLB IS25.0573) · 2 peer-reviewed publications</td>
+          <td><span class="badge-pass">○ RUN CHECK</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="creds">
+    <div class="cred-panel reveal tilt">
+      <h4>PATENTS &amp; PUBLICATIONS</h4>
+      <div class="row">
+        <span class="patent-tag">PATENT PENDING · US</span><br>
+        <span class="name">Systems &amp; Methods for Enterprise AI Assistance</span><br>
+        <span class="sub">P. Miglani et al. · SLB IS25.0573 (SCFT:0393)</span>
+      </div>
+      <div class="row">
+        <span class="name">Methane Leak Quantification on Edge Devices Using Deep Learning</span><br>
+        <span class="sub">Int. J. of Sciences: Basic and Applied Research, 2025</span>
+      </div>
+      <div class="row">
+        <span class="name">Electronic Health Record for Sustainable eHealth</span><br>
+        <span class="sub">Chapman &amp; Hall/CRC, 2022 · pp. 53–67</span>
+      </div>
+    </div>
+    <div class="cred-panel reveal tilt">
+      <h4>EDUCATION &amp; CERTIFICATIONS</h4>
+      <div class="row"><span class="name">M.S. Computer Science &amp; Engineering</span><br><span class="sub">University at Buffalo, SUNY · Dec 2023</span></div>
+      <div class="row"><span class="name">B.Tech Computer Science (Honors)</span><br><span class="sub">Jaypee Institute of Information Technology · 2020</span></div>
+      <div class="row"><span class="name">Azure AI Engineer · AWS ML Engineer</span><br><span class="sub">+ Databricks Generative AI &amp; Agentic AI Fundamentals</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NODE 05 · QUERY CONSOLE ===== -->
+<section class="node wrap" id="n5">
+  <div class="node-head reveal">
+    <span class="node-chip">NODE 05</span>
+    <span class="node-title">query the candidate</span>
+    <span class="node-status">status: <span class="s-pass">■ LIVE</span></span>
+  </div>
+  <div class="node-desc reveal">// you're the human in the loop. Type your own question or pick one — answers cite evidence you can click.</div>
+
+  <div class="console reveal">
+    <div class="console-out" id="consoleOut">
+      <div class="a">Retrieval index loaded. Ask about scale, cost, safety, agents, RAG, vision, fine-tuning, education, availability — or anything else on her resume.<span class="cursor"></span></div>
+    </div>
+    <div class="console-in">
+      <div class="console-input-row">
+        <span class="p">&gt;</span>
+        <input id="qinput" type="text" placeholder='type a question, e.g. "can she cut our GPT bill?"' autocomplete="off" aria-label="Ask a question about the candidate">
+        <button class="run-btn" id="runBtn">RUN ↵</button>
+      </div>
+      <div class="qchips" id="qchips">
+        <span class="lab">OR SELECT:</span>
+        <button class="qchip" data-q="scale">Has she shipped at scale?</button>
+        <button class="qchip" data-q="cost">Can she reduce LLM costs?</button>
+        <button class="qchip" data-q="safety">Safety &amp; compliance?</button>
+        <button class="qchip" data-q="agents">Agentic AI experience?</button>
+        <button class="qchip" data-q="meta">Why is this portfolio a trace?</button>
+        <button class="qchip" data-q="contact">Is she available?</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VERDICT ===== -->
+<section class="verdict wrap" id="verdict">
+  <div class="verdict-box" id="verdictBox">
+    <div class="verdict-label">FINAL NODE · VERDICT</div>
+    <div class="verdict-main" id="verdictText"></div>
+    <div class="verdict-reason">
+      confidence: <span class="m">0.97</span> · hallucinations detected: <span class="m">0</span> · every claim above traces to a shipped system.<br>
+      next_action: <b style="color:var(--text)">human review recommended</b> — that's you.
+    </div>
+    <div class="verdict-ctas">
+      <a class="btn btn-solid" href="mailto:praptimiglani4@gmail.com">✉ praptimiglani4@gmail.com</a>
+      <a class="btn" href="https://linkedin.com/in/prapti-miglani" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="btn" href="tel:7169364849">716 936 4849</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="k">trace_id:</span> prapti-miglani · Dallas, TX · open to Senior AI / Agentic AI roles<br>
+  <span class="egg">psst — type the four letters of what you should do next, anywhere on this page.</span>
+</footer>
+
+<!-- ===== VISITOR TRACE LOG ===== -->
+<div class="vlog min" id="vlog" aria-hidden="true">
+  <div class="vlog-head" id="vlogHead">
+    <span class="rec"></span><span class="ttl">live_trace — this page logs you back</span><span class="toggle" id="vlogToggle">▲</span>
+  </div>
+  <div class="vlog-body" id="vlogBody"></div>
+</div>
+
+<script>
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= neural net canvas ================= */
+(function(){
+  if (reduced) return;
+  const cv = document.getElementById('net'), ctx = cv.getContext('2d');
+  let W,H,pts=[],mouse={x:-9999,y:-9999};
+  function resize(){
+    W = cv.width = innerWidth; H = cv.height = innerHeight;
+    const n = Math.min(70, Math.floor(W*H/22000));
+    pts = Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*0.35,vy:(Math.random()-.5)*0.35}));
+  }
+  addEventListener('resize', resize); resize();
+  addEventListener('pointermove', e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+  addEventListener('pointerleave', ()=>{mouse.x=-9999;mouse.y=-9999;});
+  (function tick(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of pts){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;
+      if(p.y<0||p.y>H)p.vy*=-1;
+      const dx=mouse.x-p.x, dy=mouse.y-p.y, d=Math.hypot(dx,dy);
+      if(d<160 && d>1){ p.x+=dx/d*0.4; p.y+=dy/d*0.4; }
+    }
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const a=pts[i],b=pts[j],d=Math.hypot(a.x-b.x,a.y-b.y);
+        if(d<130){
+          ctx.strokeStyle=`rgba(124,156,255,${0.10*(1-d/130)})`;
+          ctx.lineWidth=1;
+          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+        }
+      }
+      const p=pts[i], md=Math.hypot(mouse.x-p.x,mouse.y-p.y);
+      ctx.fillStyle = md<160 ? 'rgba(61,220,151,0.7)' : 'rgba(124,156,255,0.45)';
+      ctx.beginPath();ctx.arc(p.x,p.y,1.6,0,7);ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  })();
+})();
+
+/* ================= visitor trace log ================= */
+const vlog = document.getElementById('vlog');
+const vlogBody = document.getElementById('vlogBody');
+const vlogToggle = document.getElementById('vlogToggle');
+let vlogOpen = false;
+document.getElementById('vlogHead').addEventListener('click', ()=>{
+  vlogOpen = !vlogOpen;
+  vlog.classList.toggle('min', !vlogOpen);
+  vlogToggle.textContent = vlogOpen ? '▼' : '▲';
+});
+const t0 = performance.now();
+function trace(msg){
+  if(reduced) return;
+  const el = document.createElement('div');
+  el.className='ev hot';
+  const s = ((performance.now()-t0)/1000).toFixed(1);
+  el.innerHTML = '<span class="t">['+s+'s]</span>'+msg;
+  vlogBody.prepend(el);
+  setTimeout(()=>el.classList.remove('hot'), 1500);
+  while(vlogBody.children.length>8) vlogBody.lastChild.remove();
+}
+setTimeout(()=>trace('session started · recruiter detected'), 1200);
+
+/* ================= boot sequence ================= */
+const bootLines = document.querySelectorAll('#bootlog .ln');
+const heroBits = ['heroName','heroSub','heroTag','dagWrap'].map(id=>document.getElementById(id));
+if (reduced){
+  bootLines.forEach(l=>l.classList.add('on'));
+  heroBits.forEach(el=>el.classList.add('on'));
+} else {
+  bootLines.forEach((l,i)=>setTimeout(()=>l.classList.add('on'), 300 + i*380));
+  heroBits.forEach((el,i)=>setTimeout(()=>el.classList.add('on'), 300 + bootLines.length*380 + i*150));
+}
+
+/* ================= scroll reveals ================= */
+const io = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:0.12});
+document.querySelectorAll('.reveal,.chunk').forEach(el=>io.observe(el));
+
+/* ================= tokens_processed scroll meter ================= */
+const tokEl = document.getElementById('tokCount');
+const barEl = document.getElementById('scrollBar');
+const TOTAL_TOKENS = 12847;
+let ticking = false;
+addEventListener('scroll', ()=>{
+  if(ticking) return; ticking = true;
+  requestAnimationFrame(()=>{
+    const h = document.documentElement;
+    const p = Math.min(1, h.scrollTop / (h.scrollHeight - h.clientHeight));
+    tokEl.textContent = Math.round(TOTAL_TOKENS*p).toLocaleString('en-US');
+    barEl.style.width = (p*100)+'%';
+    ticking = false;
+  });
+},{passive:true});
+
+/* ================= animated counters ================= */
+const counterIO = new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    counterIO.unobserve(e.target);
+    e.target.querySelectorAll('.cnum').forEach(el=>{
+      const end = +el.dataset.count, suf = el.dataset.suffix||'';
+      if (reduced){ el.textContent = end + suf; return; }
+      const s0 = performance.now(), dur = 1400;
+      (function step(t){
+        const p = Math.min(1,(t-s0)/dur), eased = 1-Math.pow(1-p,3);
+        el.textContent = Math.round(end*eased) + suf;
+        if(p<1) requestAnimationFrame(step);
+      })(s0);
+    });
+  });
+},{threshold:0.4});
+counterIO.observe(document.getElementById('counters'));
+
+/* ================= 3D tilt cards ================= */
+if(!reduced && matchMedia('(pointer:fine)').matches){
+  document.querySelectorAll('.tilt').forEach(card=>{
+    card.addEventListener('pointermove', e=>{
+      const r = card.getBoundingClientRect();
+      const rx = ((e.clientY - r.top)/r.height - .5) * -4;
+      const ry = ((e.clientX - r.left)/r.width - .5) * 4;
+      card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    });
+    card.addEventListener('pointerleave', ()=>{ card.style.transform=''; });
+  });
+}
+
+/* ================= interactive DAG ================= */
+const tip = document.getElementById('dagTip');
+const dagWrapEl = document.getElementById('dagWrap');
+document.querySelectorAll('.dag-node').forEach(n=>{
+  n.addEventListener('pointerenter', ()=>{
+    tip.innerHTML = n.dataset.tip;
+    tip.classList.add('show');
+    trace('inspected node: '+n.querySelector('text').textContent);
+  });
+  n.addEventListener('pointermove', e=>{
+    const r = dagWrapEl.getBoundingClientRect();
+    let x = e.clientX - r.left + 14, y = e.clientY - r.top - 10;
+    if (x + 240 > r.width) x = r.width - 240;
+    tip.style.left = x+'px'; tip.style.top = y+'px';
+  });
+  n.addEventListener('pointerleave', ()=>tip.classList.remove('show'));
+  n.addEventListener('click', ()=>{
+    trace('executed node: '+n.querySelector('text').textContent);
+    document.querySelector(n.dataset.target)?.scrollIntoView({behavior: reduced?'auto':'smooth'});
+  });
+  n.setAttribute('tabindex','0');
+  n.addEventListener('keydown', e=>{ if(e.key==='Enter') n.click(); });
+});
+
+/* ================= tracker state ================= */
+const sections = ['n1','n2','n3','n4','n5','verdict'].map(id=>document.getElementById(id));
+const tnodes = {};
+document.querySelectorAll('.tnode').forEach(t=>tnodes[t.dataset.node]=t);
+const secNames = {n1:'ingest',n2:'retrieve',n3:'tool_calls',n4:'validate',n5:'query',verdict:'verdict'};
+let lastSec = null;
+const secIO = new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      const id = e.target.id;
+      if(id!==lastSec){ trace('entered node: '+secNames[id]); lastSec=id; }
+      let passed = true;
+      sections.forEach(s=>{
+        const t = tnodes[s.id];
+        t.classList.remove('active','done');
+        if(s.id===id){ t.classList.add('active'); passed=false; }
+        else if(passed){ t.classList.add('done'); }
+      });
+    }
+  });
+},{rootMargin:'-30% 0px -55% 0px'});
+sections.forEach(s=>secIO.observe(s));
+
+/* ================= cost estimator ================= */
+const spend = document.getElementById('spend');
+const fmt = n=>'$'+Math.round(n).toLocaleString('en-US');
+function calc(){
+  const v = +spend.value;
+  document.getElementById('spendVal').textContent = fmt(v);
+  const ft = v*0.45, ev = (v-ft)*0.30;
+  document.getElementById('saveFt').textContent = fmt(ft)+'/mo';
+  document.getElementById('saveEval').textContent = fmt(ev)+'/mo';
+  document.getElementById('saveYr').textContent = fmt((ft+ev)*12);
+}
+spend.addEventListener('input', calc);
+spend.addEventListener('change', ()=>trace('ran savings estimate: '+fmt(+spend.value)+'/mo workload'));
+calc();
+
+/* ================= claim verification ================= */
+function verifyRow(row, silent){
+  const badge = row.querySelector('.badge-pass');
+  if(row.dataset.done) return; row.dataset.done = '1';
+  if(reduced){ badge.textContent='✓ GROUNDED'; badge.classList.add('verified'); return; }
+  badge.textContent = 'checking…';
+  setTimeout(()=>{ badge.textContent = 'retrieving evidence…'; }, 450);
+  setTimeout(()=>{ badge.textContent = '✓ GROUNDED'; badge.classList.add('verified'); }, 1000);
+  if(!silent) trace('verified claim: '+row.querySelector('.claim').textContent.slice(0,32)+'…');
+}
+const vrows = document.querySelectorAll('#vtable tbody tr');
+vrows.forEach(row=>row.addEventListener('click', ()=>verifyRow(row)));
+document.getElementById('verifyAll').addEventListener('click', e=>{
+  e.stopPropagation();
+  trace('ran full faithfulness audit');
+  vrows.forEach((row,i)=>setTimeout(()=>verifyRow(row,true), i*280));
+});
+
+/* ================= query console ================= */
+const KB = [
+  {id:'scale', keys:['scale','ship','production','volume','big','enterprise','traffic','qps'],
+   retr:'retrieved: chunk_001 (0.98) · chunk_002 (0.96)',
+   html:'Yes — and not pilot scale. Her AT&amp;T fraud pipeline processes <b><span class="m">300K+ cases every month</span></b> at <span class="m">95%+</span> extraction accuracy <a class="cite" href="#chunk_001">chunk_001</a>. At SLB her hybrid retrieval served <b><span class="m">200+ enterprise clients</span></b> at <span class="m">10K+ queries/sec</span> inside a &lt;300ms SLA <a class="cite" href="#chunk_002">chunk_002</a>. At FICO she moved <span class="m">50M+ records</span> through automated ETL <a class="cite" href="#chunk_003">chunk_003</a>.'},
+  {id:'cost', keys:['cost','bill','spend','cheap','budget','price','money','save','optimiz','token'],
+   retr:'retrieved: chunk_002 (0.95) · chunk_001 (0.91)',
+   html:'This is one of her signatures. SFT + DPO fine-tuning cut inference costs <b><span class="m">45%</span></b> while hitting 91%+ accuracy <a class="cite" href="#chunk_002">chunk_002</a>. Her agent evaluation pipeline eliminated <b><span class="m">~30% of redundant LLM calls</span></b> in production <a class="cite" href="#chunk_001">chunk_001</a>, and RAGAs-driven benchmarking cut latency <span class="m">15%</span>. Try the savings estimator in node 03 — the slider uses her real numbers.'},
+  {id:'safety', keys:['safe','safety','complian','pii','guardrail','privacy','secure','risk','halluc','regulat','trust'],
+   retr:'retrieved: chunk_002 (0.97) · chunk_001 (0.93)',
+   html:'Yes — she builds the guardrails, not just the agent. Her multi-agent compliance gateway screens <b>every LLM request in real time</b> with <span class="m">97%+ PII recall</span> at sub-200ms <a class="cite" href="#chunk_002">chunk_002</a>. At AT&amp;T she designed schema-conformance validation nodes (errors down <span class="m">~40%</span>) and tracks hallucination faithfulness &amp; citation accuracy in prod <a class="cite" href="#chunk_001">chunk_001</a> — across telecom, energy, and regulated finance.'},
+  {id:'agents', keys:['agent','langgraph','langchain','orchestr','multi-agent','dag','openai sdk','tool'],
+   retr:'retrieved: chunk_001 (0.98) · chunk_002 (0.94)',
+   html:'Deep, current, and in production. She architected a <b>LangGraph multi-node DAG</b> with tool integration via FunctionTools at AT&amp;T <a class="cite" href="#chunk_001">chunk_001</a>, a <b>multi-agent compliance gateway</b> with parallel + sequential orchestration on the OpenAI SDK at SLB <a class="cite" href="#chunk_002">chunk_002</a>, and — rarest of all — the <b>evaluation layer for agents themselves</b>: tool selection accuracy, call success rate, redundant-call rate, faithfulness. Databricks Agentic AI certified.'},
+  {id:'rag', keys:['rag','retriev','vector','embedding','milvus','search','bm25','index'],
+   retr:'retrieved: chunk_002 (0.97)',
+   html:'Enterprise-grade RAG is her home turf: hybrid <b>Milvus + BM25 + XGBoost re-ranking</b> with multi-layer Redis caching — <span class="m">~75% recall at 10K+ QPS</span> for <span class="m">200+ clients</span>, adaptive chunking over 10,000+ documents inside a &lt;300ms SLA <a class="cite" href="#chunk_002">chunk_002</a>. Also fluent in Pinecone, FAISS, pgvector, ChromaDB, Weaviate.'},
+  {id:'vision', keys:['vision','ocr','image','cv','computer vision','cnn'],
+   retr:'retrieved: chunk_001 (0.95) · chunk_004 (0.88)',
+   html:'Yes — production vision, not classification homework. <b>GPT-4.5 Vision + OCR</b> extracting structured JSON from 300K+ monthly fraud cases at <span class="m">95%+</span> accuracy <a class="cite" href="#chunk_001">chunk_001</a>, plus research: DenseNet/InceptionResNet at <span class="m">95%/94%</span>, and 3D CNN + ViT methane leak detection that beat the published benchmark <a class="cite" href="#chunk_004">chunk_004</a>.'},
+  {id:'finetune', keys:['fine','tune','sft','dpo','lora','train','rlhf','quantiz'],
+   retr:'retrieved: chunk_002 (0.96)',
+   html:'Hands-on alignment work: <b>SFT + DPO on 8,000+ labeled prompts</b> → <span class="m">91%+</span> classification accuracy and a <span class="m">45%</span> inference cost cut <a class="cite" href="#chunk_002">chunk_002</a>. Toolbox includes LoRA/QLoRA, PEFT, and INT4/INT8 quantization.'},
+  {id:'edu', keys:['education','degree','school','university','master','certif','study','patent','publica','research'],
+   retr:'retrieved: credentials.index (0.93)',
+   html:'M.S. Computer Science &amp; Engineering, <b>University at Buffalo (SUNY)</b>; B.Tech CS with Honors. Certified: <b>Azure AI Engineer, AWS ML Engineer, Databricks GenAI + Agentic AI</b>. One <span class="m">US patent pending</span> in enterprise AI systems and two peer-reviewed publications — details in node 04.'},
+  {id:'meta', keys:['meta','portfolio','trace','why','page','website','site','built','design'],
+   retr:'retrieved: meta.self_reference (1.00)',
+   html:'Because a portfolio should demonstrate, not describe. She builds agent pipelines that ingest messy input, retrieve evidence, call tools, and <b>validate every claim before output</b> — so her portfolio does exactly that to her own resume. If you remember one candidate this week, it will be the one whose resume evaluated itself.'},
+  {id:'contact', keys:['available','contact','hire','email','phone','reach','interview','location','where','relocat','remote'],
+   retr:'retrieved: contact.info (1.00)',
+   html:'Based in <b>Dallas, TX</b>, open to Senior AI Engineer / Agentic AI roles. Fastest path: <b>praptimiglani4@gmail.com</b> · 716 936 4849 · linkedin.com/in/prapti-miglani. Recommended action: scroll to the verdict node.'}
+];
+const FALLBACK = {
+  retr:'retrieved: 0 high-confidence chunks',
+  html:'Low retrieval confidence on that one — her systems say so instead of hallucinating, and so does this page. Try asking about <b>scale, cost, safety, agents, RAG, vision, fine-tuning, education,</b> or <b>availability</b> — or just email <b>praptimiglani4@gmail.com</b> and ask her directly.'
+};
+function route(q){
+  q = q.toLowerCase();
+  let best=null, bestScore=0;
+  for(const item of KB){
+    let s = 0;
+    for(const k of item.keys) if(q.includes(k)) s++;
+    if(s>bestScore){bestScore=s;best=item;}
+  }
+  return best || FALLBACK;
+}
+const out = document.getElementById('consoleOut');
+function ask(qText, forcedId){
+  const ans = (forcedId ? KB.find(k=>k.id===forcedId) : route(qText)) || FALLBACK;
+  trace('query: "'+qText.slice(0,34)+(qText.length>34?'…':'')+'"');
+  if(out.querySelector('.cursor')) out.innerHTML='';
+  const qEl = document.createElement('div'); qEl.className='q'; qEl.textContent = '> '+qText;
+  out.appendChild(qEl);
+  const think = document.createElement('div');
+  think.className='retr typing-dots';
+  think.innerHTML = 'retrieving<span>.</span><span>.</span><span>.</span>';
+  out.appendChild(think);
+  out.scrollTop = out.scrollHeight;
+  const delay = reduced ? 0 : 500 + Math.random()*300;
+  const latency = Math.round(90 + Math.random()*110);
+  setTimeout(()=>{
+    think.remove();
+    const rEl = document.createElement('div'); rEl.className='retr'; rEl.textContent = ans.retr+' · re-ranked · grounded ✓';
+    const aEl = document.createElement('div'); aEl.className='a'; aEl.innerHTML = ans.html;
+    const lEl = document.createElement('div'); lEl.className='lat';
+    lEl.innerHTML = 'answered in <span class="g">'+latency+'ms</span> · cost: <span class="g">$0.0000</span> — she optimizes for both';
+    out.appendChild(rEl); out.appendChild(aEl); out.appendChild(lEl);
+    if(!reduced){
+      aEl.style.opacity=0;
+      requestAnimationFrame(()=>{aEl.style.transition='opacity .5s';aEl.style.opacity=1;});
+    }
+    out.scrollTop = out.scrollHeight;
+  }, delay);
+}
+document.getElementById('qchips').addEventListener('click', e=>{
+  const btn = e.target.closest('.qchip'); if(!btn) return;
+  ask(btn.textContent.replace(/\s+/g,' ').trim(), btn.dataset.q);
+});
+out.addEventListener('click', e=>{
+  const c = e.target.closest('.cite'); if(!c) return;
+  e.preventDefault();
+  const target = document.querySelector(c.getAttribute('href'));
+  if(!target) return;
+  target.scrollIntoView({behavior: reduced?'auto':'smooth', block:'center'});
+  target.classList.add('flash');
+  setTimeout(()=>target.classList.remove('flash'), 1600);
+});
+const qinput = document.getElementById('qinput');
+function runFree(){
+  const v = qinput.value.trim(); if(!v) return;
+  ask(v); qinput.value='';
+}
+document.getElementById('runBtn').addEventListener('click', runFree);
+qinput.addEventListener('keydown', e=>{ if(e.key==='Enter') runFree(); });
+
+/* "/" jumps to console from anywhere */
+addEventListener('keydown', e=>{
+  if(e.key==='/' && document.activeElement!==qinput){
+    e.preventDefault();
+    document.getElementById('n5').scrollIntoView({behavior: reduced?'auto':'smooth'});
+    setTimeout(()=>qinput.focus(), reduced?0:600);
+  }
+});
+
+/* ================= verdict typing ================= */
+const vText = document.getElementById('verdictText');
+const vBox = document.getElementById('verdictBox');
+const VERDICT = 'RECOMMEND_INTERVIEW';
+const vIO = new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    vIO.unobserve(e.target);
+    trace('verdict rendered: RECOMMEND_INTERVIEW');
+    if(reduced){ vText.textContent = VERDICT; vBox.classList.add('lit'); return; }
+    let i=0;
+    (function type(){
+      vText.textContent = VERDICT.slice(0,++i);
+      if(i<VERDICT.length) setTimeout(type, 55);
+      else vBox.classList.add('lit');
+    })();
+  });
+},{threshold:0.5});
+vIO.observe(vBox);
+
+/* ================= confetti + "hire" easter egg ================= */
+const ccv = document.getElementById('confetti'), cctx = ccv.getContext('2d');
+function confetti(){
+  if(reduced) return;
+  ccv.width = innerWidth; ccv.height = innerHeight;
+  const cols = ['#3ddc97','#7c9cff','#ffb454','#dfe4ec'];
+  const parts = Array.from({length:130},()=>({
+    x:Math.random()*ccv.width, y:-20-Math.random()*ccv.height*0.4,
+    vy:2+Math.random()*3.5, vx:(Math.random()-.5)*2,
+    s:4+Math.random()*5, r:Math.random()*Math.PI, vr:(Math.random()-.5)*0.2,
+    c:cols[Math.floor(Math.random()*cols.length)]
+  }));
+  let frames = 0;
+  (function fall(){
+    cctx.clearRect(0,0,ccv.width,ccv.height);
+    for(const p of parts){
+      p.y+=p.vy; p.x+=p.vx; p.r+=p.vr;
+      cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.r);
+      cctx.fillStyle=p.c; cctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6);
+      cctx.restore();
+    }
+    if(++frames<240) requestAnimationFrame(fall);
+    else cctx.clearRect(0,0,ccv.width,ccv.height);
+  })();
+}
+let buf='';
+addEventListener('keydown', e=>{
+  if(document.activeElement===qinput) return;
+  if(e.key.length!==1) return;
+  buf = (buf+e.key.toLowerCase()).slice(-4);
+  if(buf==='hire'){
+    buf='';
+    trace('easter egg unlocked: HIRE');
+    confetti();
+    document.getElementById('verdict').scrollIntoView({behavior: reduced?'auto':'smooth'});
+  }
+});
+</script>
+</body>
+</html>
