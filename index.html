@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prapti Miglani — Senior AI Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0e1218;
+    --panel: #151b24;
+    --panel-alt: #1b2330;
+    --text: #e9edf3;
+    --muted: #8d97a8;
+    --muted-dim: #626b7a;
+    --accent: #45d9c7;
+    --accent-dim: rgba(69,217,199,0.15);
+    --warm: #f2b84b;
+    --warm-dim: rgba(242,184,75,0.15);
+    --line: rgba(255,255,255,0.08);
+    --radius: 10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(69,217,199,0.08), transparent),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(242,184,75,0.05), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  .display{font-family:'Space Grotesk', sans-serif;}
+  a{color:inherit;}
+  ::selection{background:var(--accent); color:#0e1218;}
+
+  .wrap{max-width:1080px; margin:0 auto; padding:0 32px;}
+  section{padding:96px 0;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter:blur(12px);
+    background:rgba(14,18,24,0.75);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex; align-items:center; justify-content:space-between; padding-top:18px; padding-bottom:18px;}
+  .nav-mark{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; letter-spacing:0.02em;}
+  .nav-mark span{color:var(--accent);}
+  .nav-links{display:flex; gap:28px; font-size:13px; color:var(--muted);}
+  .nav-links a{text-decoration:none; transition:color .2s;}
+  .nav-links a:hover{color:var(--text);}
+  @media (max-width:640px){ .nav-links{display:none;} }
+
+  /* ---------- HERO ---------- */
+  .hero{padding-top:88px; padding-bottom:60px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:10px;
+    margin-bottom:22px;
+  }
+  .eyebrow::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+  h1.name{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:clamp(38px,6vw,64px); letter-spacing:-0.02em; line-height:1.03;
+  }
+  .role-line{
+    font-family:'Space Grotesk',sans-serif; font-weight:500; color:var(--muted); font-size:clamp(17px,2.4vw,22px);
+    margin-top:10px;
+  }
+  .hero-copy{max-width:620px; color:var(--muted); font-size:16px; margin-top:22px;}
+  .hero-copy strong{color:var(--text); font-weight:600;}
+  .cta-row{display:flex; gap:14px; margin-top:34px; flex-wrap:wrap;}
+  .btn{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; padding:12px 20px; border-radius:8px;
+    text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all .2s; border:1px solid var(--line);
+  }
+  .btn-primary{background:var(--accent); color:#0b1015; font-weight:600; border-color:var(--accent);}
+  .btn-primary:hover{background:#5be8d6;}
+  .btn-ghost{color:var(--text); background:transparent;}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent);}
+
+  /* ---------- METRIC STRIP ---------- */
+  .metric-strip{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+    margin-top:56px;
+  }
+  @media (max-width:640px){ .metric-strip{grid-template-columns:repeat(2,1fr);} }
+  .metric{background:var(--panel); padding:22px 20px;}
+  .metric .num{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; color:var(--warm);}
+  .metric .lbl{font-size:12px; color:var(--muted); margin-top:4px;}
+
+  /* ---------- PIPELINE DIAGRAM ---------- */
+  .pipeline-wrap{margin-top:64px;}
+  .pipeline-cap{text-align:center; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted-dim); margin-top:14px;}
+  svg text{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- SECTION HEADERS ---------- */
+  .sec-head{display:flex; align-items:baseline; gap:16px; margin-bottom:44px;}
+  .sec-num{font-family:'IBM Plex Mono',monospace; color:var(--accent); font-size:13px;}
+  .sec-title{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:clamp(24px,3vw,32px);}
+  .sec-rule{flex:1; height:1px; background:var(--line);}
+
+  /* ---------- EXPERIENCE ---------- */
+  .job{
+    border-left:2px solid var(--line); padding:0 0 44px 32px; position:relative;
+  }
+  .job:last-child{padding-bottom:4px;}
+  .job::before{
+    content:''; position:absolute; left:-7px; top:4px; width:12px; height:12px; border-radius:50%;
+    background:var(--panel); border:2px solid var(--accent);
+  }
+  .job-head{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
+  .job-title{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px;}
+  .job-co{color:var(--accent); font-weight:500;}
+  .job-dates{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted); white-space:nowrap;}
+  .job-loc{font-size:13px; color:var(--muted-dim); margin-bottom:14px;}
+  .job ul{padding-left:20px; color:var(--muted);}
+  .job li{margin-bottom:9px; font-size:14.5px;}
+  .job li::marker{color:var(--accent);}
+  .job li strong{color:var(--text); font-weight:600;}
+  .tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .tag{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:4px 10px; border-radius:6px;
+    background:var(--panel-alt); color:var(--muted); border:1px solid var(--line);
+  }
+
+  /* ---------- HIGHLIGHTS GRID ---------- */
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  @media (max-width:800px){ .grid-3{grid-template-columns:1fr;} }
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px;
+    transition:transform .2s, border-color .2s;
+  }
+  .card:hover{transform:translateY(-3px); border-color:var(--accent);}
+  .card .big{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:30px; color:var(--warm);}
+  .card .title{font-weight:600; margin-top:10px; font-size:15px;}
+  .card .desc{color:var(--muted); font-size:13.5px; margin-top:6px;}
+
+  /* ---------- SKILLS ---------- */
+  .skill-row{display:grid; grid-template-columns:200px 1fr; gap:24px; padding:18px 0; border-bottom:1px solid var(--line);}
+  .skill-row:last-child{border-bottom:none;}
+  @media (max-width:640px){ .skill-row{grid-template-columns:1fr; gap:8px;} }
+  .skill-cat{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--accent); letter-spacing:0.03em;}
+  .skill-chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{font-size:13px; color:var(--muted); padding:5px 12px; border-radius:20px; background:var(--panel-alt); border:1px solid var(--line);}
+
+  /* ---------- PATENTS ---------- */
+  .pub{padding:16px 0; border-bottom:1px solid var(--line); font-size:14.5px; color:var(--muted);}
+  .pub:last-child{border-bottom:none;}
+  .pub .pub-title{color:var(--text); font-weight:500;}
+  .pub-badge{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--warm);
+    border:1px solid var(--warm-dim); background:var(--warm-dim); padding:2px 8px; border-radius:5px; margin-bottom:8px;
+  }
+
+  /* ---------- EDU / CERTS ---------- */
+  .edu-grid{display:grid; grid-template-columns:1fr 1fr; gap:40px;}
+  @media (max-width:700px){ .edu-grid{grid-template-columns:1fr;} }
+  .edu-item{margin-bottom:20px;}
+  .edu-item .sch{font-weight:600;}
+  .edu-item .deg{color:var(--muted); font-size:14px;}
+  .edu-item .dt{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted-dim);}
+  .cert-list{list-style:none;}
+  .cert-list li{padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px; display:flex; gap:10px; align-items:center;}
+  .cert-list li:last-child{border-bottom:none;}
+  .cert-list li::before{content:'✓'; color:var(--accent); font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line); padding:56px 0 40px;}
+  .foot-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:28px;}
+  .foot-links{display:flex; gap:20px; margin-top:20px; flex-wrap:wrap;}
+  .foot-copy{margin-top:40px; color:var(--muted-dim); font-size:12.5px;}
+
+  /* reveal animation */
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1; transform:none; transition:none;}
+    .eyebrow::before{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-mark">PRAPTI<span>.</span>MIGLANI</div>
+    <div class="nav-links">
+      <a href="#experience">Experience</a>
+      <a href="#highlights">Highlights</a>
+      <a href="#skills">Skills</a>
+      <a href="#patents">Patents</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Senior AI Engineer — Agentic Systems &amp; RAG</div>
+    <h1 class="name">Prapti Miglani</h1>
+    <div class="role-line">I design the pipelines that decide whether an AI's answer can be trusted.</div>
+    <p class="hero-copy">
+      6+ years building <strong>agentic AI</strong> (LangGraph, OpenAI Agents SDK), <strong>RAG retrieval</strong>
+      (Milvus, BM25, XGBoost), and <strong>LLM fine-tuning</strong> (SFT, DPO, LoRA) for telecom, energy, and
+      financial services — production systems, not prototypes.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="mailto:praptimiglani4@gmail.com">✉ Email me</a>
+      <a class="btn btn-ghost" href="https://linkedin.com/in/prapti-miglani" target="_blank" rel="noopener">in/prapti-miglani</a>
+      <a class="btn btn-ghost" href="tel:7169364849">716 936 4849</a>
+    </div>
+
+    <div class="metric-strip reveal">
+      <div class="metric"><div class="num">300K<span style="font-size:16px;">+</span></div><div class="lbl">Monthly fraud cases screened, AT&amp;T</div></div>
+      <div class="metric"><div class="num">95%<span style="font-size:16px;">+</span></div><div class="lbl">Extraction accuracy, GPT‑4.5 Vision + OCR</div></div>
+      <div class="metric"><div class="num">200<span style="font-size:16px;">+</span></div><div class="lbl">Enterprise clients on SLB RAG platform</div></div>
+      <div class="metric"><div class="num">10K<span style="font-size:16px;">+</span></div><div class="lbl">Queries/sec, hybrid Milvus + BM25 retrieval</div></div>
+      <div class="metric"><div class="num">1</div><div class="lbl">Patent pending — enterprise AI systems</div></div>
+      <div class="metric"><div class="num">6<span style="font-size:16px;">+</span></div><div class="lbl">Years in production ML / AI engineering</div></div>
+    </div>
+
+    <div class="pipeline-wrap reveal">
+      <svg viewBox="0 0 900 190" width="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Agentic pipeline diagram: ingest, retrieve, reason, validate, ship">
+        <defs>
+          <path id="flowpath" d="M70,95 C150,40 190,150 260,95 S370,150 440,95 S550,150 620,95 S730,150 800,95" />
+        </defs>
+        <path d="M70,95 C150,40 190,150 260,95 S370,150 440,95 S550,150 620,95 S730,150 800,95"
+              fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-dasharray="4 6"/>
+
+        <!-- moving dots -->
+        <circle r="5" fill="#45d9c7">
+          <animateMotion dur="6s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#flowpath"/>
+          </animateMotion>
+        </circle>
+        <circle r="5" fill="#f2b84b" opacity="0.85">
+          <animateMotion dur="6s" begin="3s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#flowpath"/>
+          </animateMotion>
+        </circle>
+
+        <!-- nodes -->
+        <g font-size="11" fill="#8d97a8" text-anchor="middle">
+          <g>
+            <circle cx="70" cy="95" r="26" fill="#151b24" stroke="#45d9c7" stroke-width="2"/>
+            <text x="70" y="99" fill="#e9edf3" font-weight="600">Ingest</text>
+            <text x="70" y="140">OCR · Vision · JSON</text>
+          </g>
+          <g>
+            <circle cx="260" cy="95" r="26" fill="#151b24" stroke="#45d9c7" stroke-width="2"/>
+            <text x="260" y="99" fill="#e9edf3" font-weight="600">Retrieve</text>
+            <text x="260" y="140">Milvus · BM25</text>
+          </g>
+          <g>
+            <circle cx="440" cy="95" r="26" fill="#151b24" stroke="#45d9c7" stroke-width="2"/>
+            <text x="440" y="99" fill="#e9edf3" font-weight="600">Reason</text>
+            <text x="440" y="140">LangGraph DAG</text>
+          </g>
+          <g>
+            <circle cx="620" cy="95" r="26" fill="#151b24" stroke="#45d9c7" stroke-width="2"/>
+            <text x="620" y="99" fill="#e9edf3" font-weight="600">Validate</text>
+            <text x="620" y="140">Schema · Guardrails</text>
+          </g>
+          <g>
+            <circle cx="800" cy="95" r="26" fill="#151b24" stroke="#f2b84b" stroke-width="2"/>
+            <text x="800" y="99" fill="#e9edf3" font-weight="600">Ship</text>
+            <text x="800" y="140">Sub‑200ms, prod</text>
+          </g>
+        </g>
+      </svg>
+      <div class="pipeline-cap">A simplified view of the agentic pipelines I design and run in production</div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">01</div>
+      <div class="sec-title">Experience</div>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="job reveal">
+      <div class="job-head">
+        <div class="job-title">Senior AI Engineer <span class="job-co">· AT&amp;T</span></div>
+        <div class="job-dates">May 2026 – Present</div>
+      </div>
+      <div class="job-loc">Plano, TX</div>
+      <ul>
+        <li>Architected a <strong>LangGraph fraud detection pipeline</strong> with multi-node DAG topology, using GPT‑4.5 Vision + OCR to extract fraud case workflows into structured JSON, achieving <strong>95%+ extraction accuracy</strong> across <strong>300K+ monthly cases</strong>.</li>
+        <li>Designed a multi-node validation workflow (routing, step membership, schema conformance), cutting downstream processing errors by <strong>~40%</strong>.</li>
+        <li>Built an agent evaluation pipeline tracking tool metrics and hallucination faithfulness, cutting redundant LLM calls <strong>~30%</strong> in production.</li>
+      </ul>
+      <div class="tags"><span class="tag">LangGraph</span><span class="tag">GPT-4.5 Vision</span><span class="tag">OCR</span><span class="tag">FunctionTools</span><span class="tag">Agent Evaluation</span></div>
+    </div>
+
+    <div class="job reveal">
+      <div class="job-head">
+        <div class="job-title">Backend Software Engineer II — AI Platform <span class="job-co">· Schlumberger (SLB)</span></div>
+        <div class="job-dates">Jun 2024 – Mar 2026</div>
+      </div>
+      <div class="job-loc">Houston, TX</div>
+      <ul>
+        <li>Architected a RAG pipeline over <strong>10,000+</strong> support tickets, wiki pages, and Teams threads with adaptive chunking and Mistral embeddings inside a <strong>&lt;300ms SLA</strong>.</li>
+        <li>Built a hybrid <strong>Milvus + BM25 + XGBoost</strong> retrieval system with multi-layer Redis caching — <strong>~75% recall</strong> at <strong>10K+ QPS</strong> across <strong>200+ enterprise clients</strong>.</li>
+        <li>Architected a multi-agent compliance gateway (OpenAI SDK, parallel + sequential orchestration) screening every LLM request in real time at sub‑200ms with <strong>97%+ PII recall</strong>.</li>
+        <li>Fine-tuned GPT via <strong>SFT + DPO</strong> on 8,000+ labeled compliance prompts — <strong>91%+ classification accuracy</strong>, <strong>45% inference cost reduction</strong>.</li>
+        <li>Benchmarked Mistral / GPT / Gemini with RAGAs and shipped via Azure CI/CD, reducing latency by <strong>15%</strong>.</li>
+      </ul>
+      <div class="tags"><span class="tag">Milvus</span><span class="tag">BM25</span><span class="tag">XGBoost</span><span class="tag">OpenAI SDK</span><span class="tag">SFT / DPO</span><span class="tag">RAGAs</span><span class="tag">Azure CI/CD</span></div>
+    </div>
+
+    <div class="job reveal">
+      <div class="job-head">
+        <div class="job-title">Machine Learning Researcher — Computer Vision <span class="job-co">· University at Buffalo, SUNY</span></div>
+        <div class="job-dates">Jan 2024 – May 2024</div>
+      </div>
+      <div class="job-loc">Buffalo, NY</div>
+      <ul>
+        <li>Reached state-of-the-art results with DenseNet121 and InceptionResNetV2 (<strong>95% / 94% test accuracy</strong>) on sustainable waste recycling via computer vision.</li>
+      </ul>
+      <div class="tags"><span class="tag">DenseNet121</span><span class="tag">InceptionResNetV2</span></div>
+    </div>
+
+    <div class="job reveal">
+      <div class="job-head">
+        <div class="job-title">Data Scientist Intern <span class="job-co">· Schlumberger (SLB)</span></div>
+        <div class="job-dates">May 2023 – Dec 2023</div>
+      </div>
+      <div class="job-loc">Houston, TX</div>
+      <ul>
+        <li>Engineered deep learning models (3D CNN, Octave CNN, ResNet, ViT, Knowledge Distillation) for methane gas leak detection — <strong>41.36% accuracy</strong>, beating the 39.1% benchmark.</li>
+      </ul>
+      <div class="tags"><span class="tag">3D CNN</span><span class="tag">Vision Transformer</span><span class="tag">Knowledge Distillation</span></div>
+    </div>
+
+    <div class="job reveal">
+      <div class="job-head">
+        <div class="job-title">Software Engineer — Machine Learning <span class="job-co">· FICO</span></div>
+        <div class="job-dates">Feb 2020 – Aug 2022</div>
+      </div>
+      <div class="job-loc">Bengaluru, India</div>
+      <ul>
+        <li>Built transaction categorization R&amp;D prototype using RoBERTa + T5 correction heads + Siamese networks — <strong>94% accuracy</strong>.</li>
+        <li>Implemented self-calibrating models, improving transactional score precision by <strong>28%</strong>.</li>
+        <li>Automated ETL with AWS Glue, moving <strong>50M+</strong> records into Redshift; PySpark pipelines improved credit card offer utilization by <strong>15%</strong> across 10,000+ issuances.</li>
+      </ul>
+      <div class="tags"><span class="tag">RoBERTa</span><span class="tag">T5</span><span class="tag">AWS Glue</span><span class="tag">Redshift</span><span class="tag">PySpark</span></div>
+    </div>
+
+    <div class="job reveal">
+      <div class="job-head">
+        <div class="job-title">Software Engineering Intern <span class="job-co">· Yamaha Motor IT Solutions</span></div>
+        <div class="job-dates">May 2019 – Jul 2019</div>
+      </div>
+      <div class="job-loc">Greater Noida, India</div>
+      <ul>
+        <li>Delivered ERP tooling for Yamaha Motors — SQL Profiler + index optimization + Redis caching cut query processing time by <strong>37%</strong>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- HIGHLIGHTS -->
+<section id="highlights">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">02</div>
+      <div class="sec-title">Why teams hire her</div>
+      <div class="sec-rule"></div>
+    </div>
+    <div class="grid-3">
+      <div class="card reveal">
+        <div class="big">Scale</div>
+        <div class="title">Ships to real production volume</div>
+        <div class="desc">300K+ monthly fraud cases at AT&amp;T, 200+ enterprise clients and 10K+ QPS at SLB — not pilot-scale demos.</div>
+      </div>
+      <div class="card reveal">
+        <div class="big">Trust</div>
+        <div class="title">Builds the guardrails, not just the model</div>
+        <div class="desc">Compliance gateways with 97%+ PII recall, hallucination/faithfulness tracking, schema-conformance validation nodes.</div>
+      </div>
+      <div class="card reveal">
+        <div class="big">Cost</div>
+        <div class="title">Optimizes what production actually pays for</div>
+        <div class="desc">45% inference cost reduction via fine-tuning, ~30% fewer redundant LLM calls, 15% latency reduction via benchmarking.</div>
+      </div>
+      <div class="card reveal">
+        <div class="big">Breadth</div>
+        <div class="title">Full stack of the modern AI system</div>
+        <div class="desc">Agentic orchestration, hybrid retrieval, fine-tuning, computer vision, and MLOps — one engineer across the whole pipeline.</div>
+      </div>
+      <div class="card reveal">
+        <div class="big">Domains</div>
+        <div class="title">Cross-industry: telecom, energy, fintech</div>
+        <div class="desc">AT&amp;T (telecom fraud), SLB (energy/enterprise RAG), FICO (financial services) — proven across regulatory environments.</div>
+      </div>
+      <div class="card reveal">
+        <div class="big">IP</div>
+        <div class="title">Patent-pending inventor</div>
+        <div class="desc">Co-inventor on a US patent filing for enterprise AI assistance systems, plus two peer-reviewed publications.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">03</div>
+      <div class="sec-title">Technical skills</div>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="skill-row reveal">
+      <div class="skill-cat">LANGUAGES</div>
+      <div class="skill-chips">
+        <span class="chip">Python</span><span class="chip">SQL</span><span class="chip">Java</span><span class="chip">JavaScript</span><span class="chip">TypeScript</span><span class="chip">Bash</span><span class="chip">C++</span>
+      </div>
+    </div>
+    <div class="skill-row reveal">
+      <div class="skill-cat">GENERATIVE AI &amp; NLP</div>
+      <div class="skill-chips">
+        <span class="chip">LLMs</span><span class="chip">RAG</span><span class="chip">Multi-Agent Systems</span><span class="chip">OpenAI Agents SDK</span><span class="chip">LangChain / LangGraph</span><span class="chip">LlamaIndex</span><span class="chip">GPT-4o</span><span class="chip">Mistral</span><span class="chip">Hugging Face (PEFT, LoRA, QLoRA)</span><span class="chip">DPO (RLHF)</span>
+      </div>
+    </div>
+    <div class="skill-row reveal">
+      <div class="skill-cat">RETRIEVAL &amp; VECTOR SEARCH</div>
+      <div class="skill-chips">
+        <span class="chip">Hybrid Retrieval (Dense + BM25)</span><span class="chip">Milvus</span><span class="chip">Pinecone</span><span class="chip">FAISS</span><span class="chip">pgvector</span><span class="chip">Re-ranking (XGBoost, MMR)</span>
+      </div>
+    </div>
+    <div class="skill-row reveal">
+      <div class="skill-cat">ML &amp; DEEP LEARNING</div>
+      <div class="skill-chips">
+        <span class="chip">PyTorch</span><span class="chip">TensorFlow</span><span class="chip">scikit-learn</span><span class="chip">XGBoost</span><span class="chip">RoBERTa / T5 / Siamese</span><span class="chip">Model Evaluation</span>
+      </div>
+    </div>
+    <div class="skill-row reveal">
+      <div class="skill-cat">LLM OPTIMIZATION</div>
+      <div class="skill-chips">
+        <span class="chip">LoRA / QLoRA</span><span class="chip">Quantization (INT4/INT8)</span><span class="chip">Prompt Chaining</span><span class="chip">Structured Outputs (Pydantic)</span><span class="chip">Latency &amp; Cost Optimization</span>
+      </div>
+    </div>
+    <div class="skill-row reveal">
+      <div class="skill-cat">MLOPS &amp; DEPLOYMENT</div>
+      <div class="skill-chips">
+        <span class="chip">ArgoCD</span><span class="chip">GitHub Actions</span><span class="chip">Azure API Management</span><span class="chip">FastAPI</span><span class="chip">Docker</span><span class="chip">Arize Phoenix</span><span class="chip">MLflow</span><span class="chip">Prometheus / Grafana</span>
+      </div>
+    </div>
+    <div class="skill-row reveal">
+      <div class="skill-cat">DATA &amp; CLOUD</div>
+      <div class="skill-chips">
+        <span class="chip">PySpark</span><span class="chip">Airflow</span><span class="chip">AWS Redshift</span><span class="chip">Dataiku</span><span class="chip">Azure (ML Studio, AKS, Synapse)</span><span class="chip">Kubernetes / Helm</span><span class="chip">PostgreSQL</span><span class="chip">MongoDB</span><span class="chip">Redis</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PATENTS -->
+<section id="patents">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">04</div>
+      <div class="sec-title">Patents &amp; publications</div>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="pub reveal">
+      <div class="pub-badge">PATENT PENDING · US FILING</div><br>
+      <span class="pub-title">Systems and Methods for Enterprise Artificial Intelligence Assistance</span> — P. Miglani, A. Mandikal, J. Wu, S. Gupta, et al. SLB Invention Disclosure IS25.0573 (SCFT:0393)
+    </div>
+    <div class="pub reveal">
+      <span class="pub-title">Methane Leak Quantification on Edge Devices Using Deep Learning</span> — A. Kohar, P. Miglani, R. Yadav, A. Shetty. <em>Int. Journal of Sciences: Basic and Applied Research</em>, 2025.
+    </div>
+    <div class="pub reveal">
+      <span class="pub-title">Electronic Health Record for Sustainable eHealth</span> — Miglani, P., Bhandari, J., Alreja, U., &amp; Sinha, A. (2022). In <em>Advanced Computational Techniques for Sustainable Computing</em>, pp. 53–67. Chapman and Hall/CRC.
+    </div>
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<section id="education">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-num">05</div>
+      <div class="sec-title">Education &amp; certifications</div>
+      <div class="sec-rule"></div>
+    </div>
+    <div class="edu-grid">
+      <div class="reveal">
+        <div class="edu-item">
+          <div class="sch">University at Buffalo, SUNY</div>
+          <div class="deg">M.S. Computer Science and Engineering</div>
+          <div class="dt">Dec 2023 · Buffalo, NY</div>
+        </div>
+        <div class="edu-item">
+          <div class="sch">Jaypee Institute of Information Technology</div>
+          <div class="deg">B.Tech Computer Science, with Honors</div>
+          <div class="dt">Jul 2020 · Noida, India</div>
+        </div>
+      </div>
+      <div class="reveal">
+        <ul class="cert-list">
+          <li>Microsoft Azure AI Engineer Associate</li>
+          <li>AWS Machine Learning Engineer Associate</li>
+          <li>Databricks Generative AI Fundamentals</li>
+          <li>Databricks Agentic AI Fundamentals</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER / CONTACT -->
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-title reveal">Let's talk about your team's AI pipeline.</div>
+    <div class="foot-links reveal">
+      <a class="btn btn-primary" href="mailto:praptimiglani4@gmail.com">✉ praptimiglani4@gmail.com</a>
+      <a class="btn btn-ghost" href="https://linkedin.com/in/prapti-miglani" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn btn-ghost" href="tel:7169364849">716 936 4849</a>
+    </div>
+    <div class="foot-copy">Dallas, TX · Open to Senior AI Engineer / Agentic AI roles</div>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+
+</body>
+</html>
